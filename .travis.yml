@@ -1,0 +1,17 @@
+sudo: true
+dist: trusty
+
+language: go
+
+os:
+  - linux
+
+git:
+  depth: 3
+
+before_script:
+  - go version
+  - go get
+
+script:
+  - go build
