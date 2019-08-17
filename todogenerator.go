@@ -6,21 +6,29 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"unicode"
+
+	"github.com/zieckey/goini"
 )
 
 var (
 	commentPrefixes = [...]string{"TODO: ", "FIXME: ", "BUG: ", "HACK: "}
+	emptyRunes      = [...]rune{}
+	CategoryIniKey  = "category"
+	IssueIniKey     = "issue"
 )
 
 type ToDoComment struct {
-	Type  string
-	Title string
-	Body  string
-	File  string
-	Line  int
+	Type     string
+	Title    string
+	Body     string
+	File     string
+	Line     int
+	Issue    int
+	Category string
 }
 
 type ToDoGenerator struct {
@@ -132,8 +140,9 @@ func parseComment(line string) []rune {
 	for j > i && unicode.IsSpace(runes[j]) {
 		j--
 	}
+	// empty comment
 	if i >= size || j < 0 || i >= j {
-		return nil
+		return emptyRunes[:]
 	}
 	return runes[i : j+1]
 }
@@ -149,6 +158,9 @@ func startsWith(s, pr []rune) bool {
 }
 
 func parseToDoTitle(line []rune) (ctype, title []rune) {
+	if line == nil || len(line) == 0 {
+		return nil, nil
+	}
 	size := len(line)
 	for _, pr := range commentPrefixes {
 		prlen := len(pr)
@@ -168,8 +180,30 @@ func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype strin
 		return
 	}
 	var commentBody string
+	var issue int
+	var category string
+
 	if len(body) > 1 {
-		commentBody = strings.Join(body[1:], "\n")
+		if len(body) > 2 {
+			ini := goini.New()
+			err := ini.Parse([]byte(body[1]), " ", "=")
+			if err == nil {
+				if v, ok := ini.Get(CategoryIniKey); ok {
+					category = v
+				}
+				if v, ok := ini.Get(IssueIniKey); ok {
+					if i, err := strconv.Atoi(v); err == nil {
+						issue = i
+					}
+				}
+			}
+		}
+		if len(category) > 0 || issue > 0 {
+			commentBody = strings.Join(body[2:], "\n")
+		} else {
+			commentBody = strings.Join(body[1:], "\n")
+		}
+		commentBody = strings.TrimSpace(commentBody)
 	}
 	relativePath, err := filepath.Rel(td.root, path)
 	if err != nil {
@@ -178,11 +212,13 @@ func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype strin
 	td.commentsWG.Add(1)
 	go func() {
 		td.commentsChan <- &ToDoComment{
-			Type:  string(ctype),
-			Title: body[0],
-			Body:  commentBody,
-			File:  relativePath,
-			Line:  lineNumber,
+			Type:     string(ctype),
+			Title:    body[0],
+			Body:     commentBody,
+			File:     relativePath,
+			Line:     lineNumber,
+			Category: category,
+			Issue:    issue,
 		}
 	}()
 }
