@@ -2,6 +2,7 @@
 TODO get - tool to extract todo tasks from source code
 
 [![Build Status](https://travis-ci.org/ribtoks/tdg.svg?branch=master)](https://travis-ci.org/ribtoks/tdg)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/712b5193d6564beb88ba1e66ac1e0792)](https://www.codacy.com/app/ribtoks/tdg)
 
 ## About
 
