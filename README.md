@@ -34,6 +34,8 @@ Sample generated json:
         ]
     }
 
+Supported comments: `//`, `/*`, `#`, `%`, `;;` (adding new supported comments is trivial).
+
 ## Build
 
 As simple as
@@ -56,3 +58,14 @@ Example:
     ./tdg --root ~/Projects/xpiks-root/xpiks/src/ --include "\.cpp$" --include "\.h$" -verbose
 
 Include pattern is a regexp. With verbose flag you get human-readable json and log output in stdout. Without verbose flag this tool could be used as input for smth else like `curl`.
+
+## How to contribute
+
+- [Fork](http://help.github.com/forking/) linuxdeploy repository on GitHub
+- Clone your fork locally
+- Configure the upstream repo (`git remote add upstream git@github.com:ribtoks/tdg.git`)
+- Create local branch (`git checkout -b your_feature`)
+- Work on your feature
+- Build and Run tests (`go tests -v`)
+- Push the branch to GitHub (`git push origin your_feature`)
+- Send a [pull request](https://help.github.com/articles/using-pull-requests) on GitHub
