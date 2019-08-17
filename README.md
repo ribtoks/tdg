@@ -6,19 +6,19 @@ TODO get - tool to extract todo tasks from source code
 
 ## About
 
-This tool generates json from comments contained in the source code. Main use-case for it is to create automatic issues based on TODO/FIXME/BUG/HACK comments. This tool supports additional tag information in the comment
+This tool generates json from comments contained in the source code. Main use-case for it is to create automatic issues based on TODO/FIXME/BUG/HACK comments. This tool supports additional tag information in the comment (Category, Issue etc.).
 
 Example of the comment:
 
     // TODO: This is title of the issue to create
-    // [optional] category=SomeCategory issue=123
+    // category=SomeCategory issue=123       <----- this line is optional
     // This is a multiline description of the issue
     // that will be in the "Body" property of the comment
 
 Sample generated json:
 
     {
-        "Root": "/Users/user/Projects/tdg",
+        "Root": "/Users/user/go/src/github.com/ribtoks/tdg",
         "Branch": "master",
         "Author": "Taras Kushnir",
         "Comments": [
