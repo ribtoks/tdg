@@ -175,16 +175,16 @@ func parseToDoTitle(line []rune) (ctype, title []rune) {
 	return nil, nil
 }
 
-func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype string, body []string) {
+func NewComment(path string, lineNumber int, ctype string, body []string) *ToDoComment {
 	if body == nil || len(body) == 0 {
-		return
+		return nil
 	}
 	var commentBody string
 	var issue int
 	var category string
 
 	if len(body) > 1 {
-		if len(body) > 2 {
+		if strings.Contains(body[1], "=") {
 			ini := goini.New()
 			err := ini.Parse([]byte(body[1]), " ", "=")
 			if err == nil {
@@ -196,6 +196,8 @@ func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype strin
 						issue = i
 					}
 				}
+			} else {
+				log.Print(err)
 			}
 		}
 		if len(category) > 0 || issue > 0 {
@@ -205,22 +207,28 @@ func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype strin
 		}
 		commentBody = strings.TrimSpace(commentBody)
 	}
+	return &ToDoComment{
+		Type:     string(ctype),
+		Title:    body[0],
+		Body:     commentBody,
+		File:     path,
+		Line:     lineNumber,
+		Category: category,
+		Issue:    issue,
+	}
+}
+
+func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype string, body []string) {
+
 	relativePath, err := filepath.Rel(td.root, path)
 	if err != nil {
 		relativePath = path
 	}
+	c := NewComment(relativePath, lineNumber, ctype, body)
 	td.commentsWG.Add(1)
-	go func() {
-		td.commentsChan <- &ToDoComment{
-			Type:     string(ctype),
-			Title:    body[0],
-			Body:     commentBody,
-			File:     relativePath,
-			Line:     lineNumber,
-			Category: category,
-			Issue:    issue,
-		}
-	}()
+	go func(cmt *ToDoComment) {
+		td.commentsChan <- cmt
+	}(c)
 }
 
 func (td *ToDoGenerator) parseFile(path string) {
