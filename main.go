@@ -44,10 +44,10 @@ func main() {
 	}
 
 	result := struct {
-		Root     string
-		Branch   string
-		Author   string
-		Comments []*ToDoComment `json:comments`
+		Root     string         `json:"root"`
+		Branch   string         `json:"branch"`
+		Author   string         `json:"author"`
+		Comments []*ToDoComment `json:"comments"`
 	}{
 		Root:     td.root,
 		Branch:   env.Branch(),

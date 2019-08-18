@@ -22,13 +22,13 @@ var (
 )
 
 type ToDoComment struct {
-	Type     string
-	Title    string
-	Body     string
-	File     string
-	Line     int
-	Issue    int
-	Category string
+	Type     string `json:"type"`
+	Title    string `json:"title"`
+	Body     string `json:"body"`
+	File     string `json:"file"`
+	Line     int    `json:"line"`
+	Issue    int    `json:"issue"`
+	Category string `json:"category"`
 }
 
 type ToDoGenerator struct {
