@@ -47,11 +47,13 @@ func main() {
 		Root     string         `json:"root"`
 		Branch   string         `json:"branch"`
 		Author   string         `json:"author"`
+		Project  string         `json:"project"`
 		Comments []*ToDoComment `json:"comments"`
 	}{
 		Root:     td.root,
 		Branch:   env.Branch(),
 		Author:   env.Author(),
+		Project:  env.Project(),
 		Comments: comments,
 	}
 	var js []byte

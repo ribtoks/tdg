@@ -9,11 +9,13 @@ import (
 )
 
 type Environment struct {
-	root       string
-	branch     string
-	author     string
-	initBranch sync.Once
-	initAuthor sync.Once
+	root        string
+	branch      string
+	author      string
+	project     string
+	initBranch  sync.Once
+	initAuthor  sync.Once
+	initProject sync.Once
 }
 
 func NewEnvironment(root string) *Environment {
@@ -27,6 +29,7 @@ func NewEnvironment(root string) *Environment {
 	go func() {
 		log.Printf("Current branch is %v", env.Branch())
 		log.Printf("Current author is %v", env.Author())
+		log.Printf("Current project is %v", env.Project())
 	}()
 	return env
 }
@@ -55,5 +58,12 @@ func (env *Environment) Author() string {
 		env.author = env.Run("git", "config", "user.name")
 	})
 	return env.author
+}
 
+func (env *Environment) Project() string {
+	env.initProject.Do(func() {
+		project := env.Run("git", "rev-parse", "--show-toplevel")
+		env.project = env.Run("basename", project)
+	})
+	return env.project
 }
