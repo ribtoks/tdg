@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-// runtime sourc code environment (git attributes)
+// Environment contains information about git repository
 type Environment struct {
 	root        string
 	branch      string
@@ -19,7 +19,7 @@ type Environment struct {
 	initProject sync.Once
 }
 
-// creates new environment instance for the codebase
+// NewEnvironment creates new instance of Environment struct
 func NewEnvironment(root string) *Environment {
 	absolutePath, err := filepath.Abs(root)
 	if err != nil {
@@ -36,7 +36,7 @@ func NewEnvironment(root string) *Environment {
 	return env
 }
 
-// execute a command in the environment's root
+// Run executes a command in the environment's root
 func (env *Environment) Run(cmd string, arg ...string) string {
 	command := exec.Command(cmd, arg...)
 	command.Dir = env.root
@@ -48,7 +48,7 @@ func (env *Environment) Run(cmd string, arg ...string) string {
 	return strings.TrimSpace(string(out))
 }
 
-// returns current git branch
+// Branch returns current git branch
 func (env *Environment) Branch() string {
 	env.initBranch.Do(func() {
 		env.branch = env.Run("git", "rev-parse", "--abbrev-ref", "HEAD")
@@ -56,7 +56,7 @@ func (env *Environment) Branch() string {
 	return env.branch
 }
 
-// returns current git author
+// Author returns current git author
 func (env *Environment) Author() string {
 	env.initAuthor.Do(func() {
 		env.author = env.Run("git", "config", "user.name")
@@ -64,7 +64,7 @@ func (env *Environment) Author() string {
 	return env.author
 }
 
-// returns current git project name
+// Project returns current git project name
 func (env *Environment) Project() string {
 	env.initProject.Do(func() {
 		project := env.Run("git", "rev-parse", "--show-toplevel")
