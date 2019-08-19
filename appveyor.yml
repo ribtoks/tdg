@@ -1,0 +1,25 @@
+# version format
+version: 0.1.{build}-{branch}
+
+skip_tags: false
+
+skip_commits:
+  message: /.*\[ci skip\]/       # Regex for matching commit message
+
+# clone directory
+clone_folder: c:\projects\tdg
+
+environment:
+  GOPATH: c:\gopath
+
+clone_depth: 3                      # clone entire repository history if not defined
+
+before_build:
+  - go version
+  - go get
+
+build_script:
+  - go build
+
+test_script:
+  - go test -v ./...
