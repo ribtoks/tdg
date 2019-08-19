@@ -17,10 +17,11 @@ import (
 var (
 	commentPrefixes = [...]string{"TODO: ", "FIXME: ", "BUG: ", "HACK: "}
 	emptyRunes      = [...]rune{}
-	CategoryIniKey  = "category"
-	IssueIniKey     = "issue"
+	categoryIniKey  = "category"
+	issueIniKey     = "issue"
 )
 
+// a task that is parsed from TODO comment
 type ToDoComment struct {
 	Type     string `json:"type"`
 	Title    string `json:"title"`
@@ -31,6 +32,7 @@ type ToDoComment struct {
 	Category string `json:"category,omitempty"`
 }
 
+// Main struct responsible for parsing code base
 type ToDoGenerator struct {
 	root         string
 	filters      []*regexp.Regexp
@@ -40,6 +42,7 @@ type ToDoGenerator struct {
 	minWords     int
 }
 
+// Creates new generator for a code base
 func NewToDoGenerator(root string, filters []string, minWords int) *ToDoGenerator {
 	log.Printf("Using %v filters", filters)
 	rfilters := make([]*regexp.Regexp, 0, len(filters))
@@ -61,7 +64,8 @@ func NewToDoGenerator(root string, filters []string, minWords int) *ToDoGenerato
 	return td
 }
 
-func (td *ToDoGenerator) Generate() (error, []*ToDoComment) {
+// entry point to parsing of the code base
+func (td *ToDoGenerator) Generate() ([]*ToDoComment, error) {
 	matchesCount := 0
 	err := filepath.Walk(td.root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -91,13 +95,13 @@ func (td *ToDoGenerator) Generate() (error, []*ToDoComment) {
 	})
 
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	log.Printf("Matched files: %v", matchesCount)
 	td.commentsWG.Wait()
 	close(td.commentsChan)
-	return nil, td.comments
+	return td.comments, nil
 }
 
 func countTitleWords(s string) int {
@@ -203,10 +207,10 @@ func NewComment(path string, lineNumber int, ctype string, body []string) *ToDoC
 			ini := goini.New()
 			err := ini.Parse([]byte(body[1]), " ", "=")
 			if err == nil {
-				if v, ok := ini.Get(CategoryIniKey); ok {
+				if v, ok := ini.Get(categoryIniKey); ok {
 					category = v
 				}
-				if v, ok := ini.Get(IssueIniKey); ok {
+				if v, ok := ini.Get(issueIniKey); ok {
 					if i, err := strconv.Atoi(v); err == nil {
 						issue = i
 					}
