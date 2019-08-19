@@ -27,6 +27,7 @@ var (
 	srcRootFlag         = flag.String("root", "./", "Path to the the root of source code")
 	helpFlag            = flag.Bool("help", false, "Show help")
 	verboseFlag         = flag.Bool("verbose", false, "Be verbose")
+	minWordCountFlag    = flag.Int("min-words", 3, "Skip comments with less than minimum words")
 )
 
 func main() {
@@ -37,7 +38,7 @@ func main() {
 	}
 
 	env := NewEnvironment(*srcRootFlag)
-	td := NewToDoGenerator(*srcRootFlag, includePatternsFlag)
+	td := NewToDoGenerator(*srcRootFlag, includePatternsFlag, *minWordCountFlag)
 	err, comments := td.Generate()
 	if err != nil {
 		log.Fatal(err)

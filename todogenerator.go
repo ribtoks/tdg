@@ -27,8 +27,8 @@ type ToDoComment struct {
 	Body     string `json:"body"`
 	File     string `json:"file"`
 	Line     int    `json:"line"`
-	Issue    int    `json:"issue"`
-	Category string `json:"category"`
+	Issue    int    `json:"issue,omitempty"`
+	Category string `json:"category,omitempty"`
 }
 
 type ToDoGenerator struct {
@@ -37,9 +37,10 @@ type ToDoGenerator struct {
 	commentsChan chan *ToDoComment
 	commentsWG   sync.WaitGroup
 	comments     []*ToDoComment
+	minWords     int
 }
 
-func NewToDoGenerator(root string, filters []string) *ToDoGenerator {
+func NewToDoGenerator(root string, filters []string, minWords int) *ToDoGenerator {
 	log.Printf("Using %v filters", filters)
 	rfilters := make([]*regexp.Regexp, 0, len(filters))
 	for _, f := range filters {
@@ -52,6 +53,7 @@ func NewToDoGenerator(root string, filters []string) *ToDoGenerator {
 	td := &ToDoGenerator{
 		root:         absolutePath,
 		filters:      rfilters,
+		minWords:     minWords,
 		commentsChan: make(chan *ToDoComment),
 		comments:     make([]*ToDoComment, 0),
 	}
@@ -98,9 +100,22 @@ func (td *ToDoGenerator) Generate() (error, []*ToDoComment) {
 	return nil, td.comments
 }
 
+func countTitleWords(s string) int {
+	words := strings.Fields(s)
+	count := 0
+	for _, w := range words {
+		if len(w) > 2 {
+			count++
+		}
+	}
+	return count
+}
+
 func (td *ToDoGenerator) processComments() {
 	for c := range td.commentsChan {
-		td.comments = append(td.comments, c)
+		if countTitleWords(c.Title) >= td.minWords {
+			td.comments = append(td.comments, c)
+		}
 		td.commentsWG.Done()
 	}
 }

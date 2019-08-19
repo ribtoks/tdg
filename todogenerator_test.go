@@ -119,3 +119,24 @@ func TestNewComment(t *testing.T) {
 		})
 	}
 }
+
+var titleTests = []struct {
+	in  string
+	out int
+}{
+	{"a a a", 0},
+	{"aaa", 1},
+	{"aaa bbb c d", 2},
+	{"aa bb cd", 0},
+}
+
+func TestTitleWords(t *testing.T) {
+	for _, tt := range titleTests {
+		t.Run(tt.in, func(t *testing.T) {
+			wc := countTitleWords(tt.in)
+			if wc != tt.out {
+				t.Errorf("got %v, expected %v", wc, tt.out)
+			}
+		})
+	}
+}
