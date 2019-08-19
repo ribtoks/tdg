@@ -273,7 +273,6 @@ func (td *ToDoGenerator) parseFile(path string) {
 				// do we need to finalize previous
 				if lastType != "" {
 					td.accountComment(path, lastStart, lastType, todo)
-					lastType = ""
 				}
 				// construct new one
 				lastType = string(ctype)
@@ -295,6 +294,5 @@ func (td *ToDoGenerator) parseFile(path string) {
 	// detect todo item at the end of the file
 	if lastType != "" {
 		td.accountComment(path, lastStart, lastType, todo)
-		lastType = ""
 	}
 }
