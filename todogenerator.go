@@ -21,7 +21,7 @@ var (
 	issueIniKey     = "issue"
 )
 
-// a task that is parsed from TODO comment
+// ToDoComment a task that is parsed from TODO comment
 type ToDoComment struct {
 	Type     string `json:"type"`
 	Title    string `json:"title"`
@@ -32,7 +32,7 @@ type ToDoComment struct {
 	Category string `json:"category,omitempty"`
 }
 
-// Main struct responsible for parsing code base
+// ToDoGenerator is responsible for parsing code base to ToDoComments
 type ToDoGenerator struct {
 	root         string
 	filters      []*regexp.Regexp
@@ -42,7 +42,7 @@ type ToDoGenerator struct {
 	minWords     int
 }
 
-// Creates new generator for a code base
+// NewToDoGenerator creates new generator for a source root
 func NewToDoGenerator(root string, filters []string, minWords int) *ToDoGenerator {
 	log.Printf("Using %v filters", filters)
 	rfilters := make([]*regexp.Regexp, 0, len(filters))
@@ -64,7 +64,7 @@ func NewToDoGenerator(root string, filters []string, minWords int) *ToDoGenerato
 	return td
 }
 
-// entry point to parsing of the code base
+// Generate is an entry point to comment generation
 func (td *ToDoGenerator) Generate() ([]*ToDoComment, error) {
 	matchesCount := 0
 	err := filepath.Walk(td.root, func(path string, info os.FileInfo, err error) error {
@@ -194,6 +194,7 @@ func parseToDoTitle(line []rune) (ctype, title []rune) {
 	return nil, nil
 }
 
+// NewComment creates new task from parsed comment lines
 func NewComment(path string, lineNumber int, ctype string, body []string) *ToDoComment {
 	if body == nil || len(body) == 0 {
 		return nil
