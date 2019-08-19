@@ -39,7 +39,7 @@ func main() {
 
 	env := NewEnvironment(*srcRootFlag)
 	td := NewToDoGenerator(*srcRootFlag, includePatternsFlag, *minWordCountFlag)
-	err, comments := td.Generate()
+	comments, err := td.Generate()
 	if err != nil {
 		log.Fatal(err)
 	}
