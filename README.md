@@ -4,6 +4,7 @@ TODO get - tool to extract todo tasks from source code
 [![Build Status](https://travis-ci.org/ribtoks/tdg.svg?branch=master)](https://travis-ci.org/ribtoks/tdg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ribtoks/tdg)](https://goreportcard.com/report/github.com/ribtoks/tdg)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/712b5193d6564beb88ba1e66ac1e0792)](https://www.codacy.com/app/ribtoks/tdg)
+[![Maintainability](https://api.codeclimate.com/v1/badges/89dad5db195c7b5d3e90/maintainability)](https://codeclimate.com/github/ribtoks/tdg/maintainability)
 
 ## About
 
@@ -59,7 +60,7 @@ As simple as
 
 Example:
 
-    ./tdg --root ~/Projects/xpiks-root/xpiks/src/ --include "\.cpp$" --include "\.h$" -verbose
+    tdg -root ~/Projects/xpiks-root/xpiks/src/ -include "\.(cpp|h)$" -verbose
 
 Include pattern is a regexp. With verbose flag you get human-readable json and log output in stdout. Without verbose flag this tool could be used as input for smth else like `curl`.
 
