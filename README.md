@@ -46,13 +46,15 @@ As simple as
 ## Usage
 
     -help
-            Show help
+    	Show help
     -include value
-            Include pattern (can be specified multiple times)
+    	Include pattern (can be specified multiple times)
+    -min-words int
+    	Skip comments with less than minimum words (default 3)
     -root string
-            Path to the the root of source code (default "./")
+    	Path to the the root of source code (default "./")
     -verbose
-            Be verbose
+    	Be verbose
 
 Example:
 
