@@ -7,7 +7,7 @@ TODO get - tool to extract todo tasks from source code
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/712b5193d6564beb88ba1e66ac1e0792)](https://www.codacy.com/app/ribtoks/tdg)
 [![Maintainability](https://api.codeclimate.com/v1/badges/89dad5db195c7b5d3e90/maintainability)](https://codeclimate.com/github/ribtoks/tdg/maintainability)
 
-## About
+# About
 
 This tool generates json from comments contained in the source code. Main use-case for it is to create automatic issues based on TODO/FIXME/BUG/HACK comments. This tool supports additional tag information in the comment (Category, Issue etc.).
 
@@ -40,13 +40,19 @@ Sample generated json:
 
 Supported comments: `//`, `/*`, `#`, `%`, `;;` (adding new supported comments is trivial).
 
-## Build
+# Install
+
+As simple as
+
+    go get github.com/ribtoks/tdg
+
+# Build
 
 As simple as
 
     go build
 
-## Usage
+# Usage
 
     -help
     	Show help
