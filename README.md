@@ -18,18 +18,19 @@ Example of the comment:
 Sample generated json:
 
     {
-        "Root": "/Users/user/go/src/github.com/ribtoks/tdg",
-        "Branch": "master",
-        "Author": "Taras Kushnir",
-        "Comments": [
+        "root": "/Users/user/go/src/github.com/ribtoks/tdg",
+        "branch": "master",
+        "project": "tdg",
+        "author": "Taras Kushnir",
+        "comments": [
             {
-                "Type": "TODO",
-                "Title": "This is title of the issue to create"
-                "Body": "This is a multiline description of the issue\nthat will be in the \"Body\" property of the comment",
-                "File": "main.go",
-                "Line": 92,
-                "Issue": 123,
-                "Category": "SomeCategory"
+                "type": "TODO",
+                "title": "This is title of the issue to create"
+                "body": "This is a multiline description of the issue\nthat will be in the \"Body\" property of the comment",
+                "file": "main.go",
+                "line": 92,
+                "issue": 123,
+                "category": "SomeCategory"
             }
         ]
     }
