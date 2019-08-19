@@ -64,11 +64,11 @@ Include pattern is a regexp. With verbose flag you get human-readable json and l
 
 ## How to contribute
 
-- [Fork](http://help.github.com/forking/) linuxdeploy repository on GitHub
-- Clone your fork locally
-- Configure the upstream repo (`git remote add upstream git@github.com:ribtoks/tdg.git`)
-- Create local branch (`git checkout -b your_feature`)
-- Work on your feature
-- Build and Run tests (`go tests -v`)
-- Push the branch to GitHub (`git push origin your_feature`)
-- Send a [pull request](https://help.github.com/articles/using-pull-requests) on GitHub
+  - [Fork](http://help.github.com/forking/) linuxdeploy repository on GitHub
+  - Clone your fork locally
+  - Configure the upstream repo (`git remote add upstream git@github.com:ribtoks/tdg.git`)
+  - Create local branch (`git checkout -b your_feature`)
+  - Work on your feature
+  - Build and Run tests (`go tests -v`)
+  - Push the branch to GitHub (`git push origin your_feature`)
+  - Send a [pull request](https://help.github.com/articles/using-pull-requests) on GitHub
