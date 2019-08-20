@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -23,12 +25,14 @@ type Environment struct {
 func NewEnvironment(root string) *Environment {
 	absolutePath, err := filepath.Abs(root)
 	if err != nil {
+		log.Printf("Error when setting env root: %v", err)
 		absolutePath = root
 	}
 	env := &Environment{
 		root: absolutePath,
 	}
 	go func() {
+		log.Printf("Current root is %v", env.root)
 		log.Printf("Current branch is %v", env.Branch())
 		log.Printf("Current author is %v", env.Author())
 		log.Printf("Current project is %v", env.Project())
@@ -36,16 +40,38 @@ func NewEnvironment(root string) *Environment {
 	return env
 }
 
+func sliceWithoutGitDir(slice []string) []string {
+	newEnv := make([]string, 0, len(slice))
+	for _, s := range slice {
+		if strings.HasPrefix(strings.ToUpper(s), "GIT_DIR") {
+			continue
+		}
+		newEnv = append(newEnv, s)
+	}
+	return newEnv
+}
+
 // Run executes a command in the environment's root
 func (env *Environment) Run(cmd string, arg ...string) string {
 	command := exec.Command(cmd, arg...)
+	// setting working directory here breaks GIT_DIR variable
 	command.Dir = env.root
-	out, err := command.Output()
+	// so we need to remove this variable from environment
+	command.Env = sliceWithoutGitDir(os.Environ())
+
+	var stdout, stderr bytes.Buffer
+	command.Stdout = &stdout
+	command.Stderr = &stderr
+
+	err := command.Run()
 	if err != nil {
-		log.Print(err)
+		log.Printf("Command run error: %s", err)
+		log.Printf("Command stderr: %s", string(stderr.Bytes()))
 		return ""
 	}
-	return strings.TrimSpace(string(out))
+
+	outStr := string(stdout.Bytes())
+	return strings.TrimSpace(outStr)
 }
 
 // Branch returns current git branch

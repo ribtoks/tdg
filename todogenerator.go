@@ -51,6 +51,7 @@ func NewToDoGenerator(root string, filters []string, minWords int) *ToDoGenerato
 	}
 	absolutePath, err := filepath.Abs(root)
 	if err != nil {
+		log.Printf("Error setting generator root: %v", err)
 		absolutePath = root
 	}
 	td := &ToDoGenerator{
