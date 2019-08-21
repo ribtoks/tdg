@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -22,12 +23,18 @@ func (af *arrayFlags) Set(value string) error {
 	return nil
 }
 
+const (
+	appName = "tdg"
+)
+
 var (
 	includePatternsFlag arrayFlags
 	srcRootFlag         = flag.String("root", "./", "Path to the the root of source code")
 	helpFlag            = flag.Bool("help", false, "Show help")
 	verboseFlag         = flag.Bool("verbose", false, "Be verbose")
 	minWordCountFlag    = flag.Int("min-words", 3, "Skip comments with less than minimum words")
+	stdoutFlag          = flag.Bool("stdout", false, "Duplicate logs to stdout")
+	logPathFlag         = flag.String("log", "tdg.log", "Path to the logfile")
 )
 
 func main() {
@@ -35,6 +42,11 @@ func main() {
 	if err != nil {
 		flag.PrintDefaults()
 		log.Fatal(err)
+	}
+
+	logfile, err := setupLogging()
+	if err == nil {
+		defer logfile.Close()
 	}
 
 	env := NewEnvironment(*srcRootFlag)
@@ -88,4 +100,26 @@ func parseFlags() error {
 		log.SetOutput(ioutil.Discard)
 	}
 	return nil
+}
+
+func setupLogging() (f *os.File, err error) {
+	f, err = os.OpenFile(*logPathFlag, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		if *stdoutFlag {
+			fmt.Println("error opening file: %v", *logPathFlag)
+		}
+		return nil, err
+	}
+
+	if *stdoutFlag {
+		mw := io.MultiWriter(os.Stdout, f)
+		log.SetOutput(mw)
+	} else {
+		log.SetOutput(f)
+	}
+
+	log.Println("------------------------------")
+	log.Println(appName + " log started")
+
+	return f, err
 }
