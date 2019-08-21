@@ -115,7 +115,7 @@ func setupLogging() (f *os.File, err error) {
 	}
 
 	log.Println("------------------------------")
-	log.Println(appName + " log started")
+	log.Printf("%v log started", appName)
 
 	return f, err
 }
