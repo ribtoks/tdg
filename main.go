@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -31,7 +30,7 @@ var (
 	includePatternsFlag arrayFlags
 	srcRootFlag         = flag.String("root", "./", "Path to the the root of source code")
 	helpFlag            = flag.Bool("help", false, "Show help")
-	verboseFlag         = flag.Bool("verbose", false, "Be verbose")
+	verboseFlag         = flag.Bool("verbose", false, "Output human-readable json")
 	minWordCountFlag    = flag.Int("min-words", 3, "Skip comments with less than minimum words")
 	stdoutFlag          = flag.Bool("stdout", false, "Duplicate logs to stdout")
 	logPathFlag         = flag.String("log", "tdg.log", "Path to the logfile")
@@ -95,9 +94,6 @@ func parseFlags() error {
 	}
 	if !srcRoot.IsDir() {
 		return errors.New("Root path does not point to a directory")
-	}
-	if !*verboseFlag {
-		log.SetOutput(ioutil.Discard)
 	}
 	return nil
 }

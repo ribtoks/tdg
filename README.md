@@ -18,28 +18,28 @@ This tool generates json from comments contained in the source code. Main use-ca
 Example of the comment:
 
     // TODO: This is title of the issue to create
-    // category=SomeCategory issue=123       <----- this line is optional
+    // category=SomeCategory issue=123
     // This is a multiline description of the issue
     // that will be in the "Body" property of the comment
 
-Sample generated json:
+Sample generated json (if run in this repository root as `tdg -verbose`):
 
     {
-        "root": "/Users/user/go/src/github.com/ribtoks/tdg",
-        "branch": "master",
-        "project": "tdg",
-        "author": "Taras Kushnir",
-        "comments": [
-            {
-                "type": "TODO",
-                "title": "This is title of the issue to create"
-                "body": "This is a multiline description of the issue\nthat will be in the \"Body\" property of the comment",
-                "file": "main.go",
-                "line": 92,
-                "issue": 123,
-                "category": "SomeCategory"
-            }
-        ]
+      "root": "C:\\Users\\latis\\go\\src\\github.com\\ribtoks\\tdg",
+      "branch": "master",
+      "author": "Taras Kushnir",
+      "project": "tdg",
+      "comments": [
+        {
+          "type": "TODO",
+          "title": "This is title of the issue to create",
+          "body": "This is a multiline description of the issue\nthat will be in the \"Body\" property of the comment",
+          "file": "README.md",
+          "line": 19,
+          "issue": 123,
+          "category": "SomeCategory"
+        }
+      ]
     }
 
 Supported comments: `//`, `/*`, `#`, `%`, `;;` (adding new supported comments is trivial).
@@ -59,15 +59,19 @@ As simple as
 ## Usage
 
     -help
-    	Show help
+        Show help
     -include value
-    	Include pattern (can be specified multiple times)
+        Include pattern (can be specified multiple times)
+    -log string
+        Path to the logfile (default "tdg.log")
     -min-words int
-    	Skip comments with less than minimum words (default 3)
+        Skip comments with less than minimum words (default 3)
     -root string
-    	Path to the the root of source code (default "./")
+        Path to the the root of source code (default "./")
+    -stdout
+        Duplicate logs to stdout
     -verbose
-    	Be verbose
+        Output human-readable json
 
 Example:
 
