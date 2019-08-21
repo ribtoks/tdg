@@ -102,7 +102,7 @@ func setupLogging() (f *os.File, err error) {
 	f, err = os.OpenFile(*logPathFlag, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		if *stdoutFlag {
-			fmt.Println("error opening file: %v", *logPathFlag)
+			fmt.Printf("error opening file: %v", *logPathFlag)
 		}
 		return nil, err
 	}
