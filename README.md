@@ -81,7 +81,7 @@ Include pattern is a regexp. With verbose flag you get human-readable json and l
 
 ## How to contribute
 
--   [Fork](http://help.github.com/forking/) linuxdeploy repository on GitHub
+-   [Fork](http://help.github.com/forking/) tdg repository on GitHub
 -   Clone your fork locally
 -   Configure the upstream repo (`git remote add upstream git@github.com:ribtoks/tdg.git`)
 -   Create local branch (`git checkout -b your_feature`)
