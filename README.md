@@ -25,7 +25,7 @@ Example of the comment:
 Sample generated json (if run in this repository root as `tdg -verbose`):
 
     {
-      "root": "C:\\Users\\latis\\go\\src\\github.com\\ribtoks\\tdg",
+      "root": "/Users/ribtoks/go/src/github.com/ribtoks/tdg",
       "branch": "master",
       "author": "Taras Kushnir",
       "project": "tdg",
