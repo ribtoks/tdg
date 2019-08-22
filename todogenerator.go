@@ -2,7 +2,10 @@ package main
 
 import (
 	"bufio"
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -50,6 +53,7 @@ type ToDoGenerator struct {
 	commentsWG   sync.WaitGroup
 	comments     []*ToDoComment
 	minWords     int
+	addedMap     map[string]bool
 }
 
 // NewToDoGenerator creates new generator for a source root
@@ -70,6 +74,7 @@ func NewToDoGenerator(root string, filters []string, minWords int) *ToDoGenerato
 		minWords:     minWords,
 		commentsChan: make(chan *ToDoComment),
 		comments:     make([]*ToDoComment, 0),
+		addedMap:     make(map[string]bool),
 	}
 	go td.processComments()
 	return td
@@ -126,11 +131,24 @@ func countTitleWords(s string) int {
 	return count
 }
 
+func (td *ToDoGenerator) addComment(c *ToDoComment) {
+	h := md5.New()
+	io.WriteString(h, c.Title)
+	io.WriteString(h, c.Body)
+	s := hex.EncodeToString(h.Sum(nil))
+	if _, ok := td.addedMap[s]; ok {
+		log.Printf("Skipping comment duplicate in %v:%v", c.File, c.Line)
+		return
+	}
+	if countTitleWords(c.Title) >= td.minWords {
+		td.comments = append(td.comments, c)
+		td.addedMap[s] = true
+	}
+}
+
 func (td *ToDoGenerator) processComments() {
 	for c := range td.commentsChan {
-		if countTitleWords(c.Title) >= td.minWords {
-			td.comments = append(td.comments, c)
-		}
+		td.addComment(c)
 		td.commentsWG.Done()
 	}
 }
