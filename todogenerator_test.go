@@ -154,3 +154,25 @@ func TestTitleWords(t *testing.T) {
 		})
 	}
 }
+
+var estimateTests = []struct {
+	in  string
+	out float64
+}{
+	{"", 0},
+	{"30", 30},
+	{"30h", 30},
+	{"30m", 0.5},
+	{"30x", 0},
+}
+
+func TestEstimates(t *testing.T) {
+	for _, tt := range estimateTests {
+		t.Run(tt.in, func(t *testing.T) {
+			e, _ := parseEstimate(tt.in)
+			if e != tt.out {
+				t.Errorf("got %v, expected %v", e, tt.out)
+			}
+		})
+	}
+}
