@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"testing"
 )
+
+const float64EqualityThreshold = 1e-9
 
 var commentTests = []struct {
 	in  string
@@ -84,20 +87,28 @@ func TestTodoTitle(t *testing.T) {
 	}
 }
 
+func almostEqual(a, b float64) bool {
+	return math.Abs(a-b) <= float64EqualityThreshold
+}
+
 var commentConstructorTests = []struct {
 	in       []string
 	title    string
 	body     string
 	category string
 	issue    int
+	estimate float64
 }{
-	{[]string{"issue title"}, "issue title", "", "", 0},
-	{[]string{"issue title", "category=Test"}, "issue title", "", "Test", 0},
-	{[]string{"issue title", "issue=123"}, "issue title", "", "", 123},
-	{[]string{"issue title", "  category=Test issue=123 "}, "issue title", "", "Test", 123},
-	{[]string{"issue title", "issue=123", "third line"}, "issue title", "third line", "", 123},
-	{[]string{"issue title", "second line"}, "issue title", "second line", "", 0},
-	{[]string{"issue title", "second line", "third line"}, "issue title", "second line\nthird line", "", 0},
+	{[]string{"issue title"}, "issue title", "", "", 0, 0.0},
+	{[]string{"issue title", "category=Test"}, "issue title", "", "Test", 0, 0.0},
+	{[]string{"issue title", "issue=123"}, "issue title", "", "", 123, 0.0},
+	{[]string{"issue title", "estimate=30m"}, "issue title", "", "", 0, 0.5},
+	{[]string{"issue title", "estimate=30x"}, "issue title", "estimate=30x", "", 0, 0.0},
+	{[]string{"issue title", "estimate=30h"}, "issue title", "", "", 0, 30},
+	{[]string{"issue title", "  category=Test issue=123 estimate=60m "}, "issue title", "", "Test", 123, 1.0},
+	{[]string{"issue title", "issue=123", "third line"}, "issue title", "third line", "", 123, 0.0},
+	{[]string{"issue title", "second line"}, "issue title", "second line", "", 0, 0.0},
+	{[]string{"issue title", "second line", "third line"}, "issue title", "second line\nthird line", "", 0, 0.0},
 }
 
 func TestNewComment(t *testing.T) {
@@ -115,6 +126,9 @@ func TestNewComment(t *testing.T) {
 			}
 			if c.Issue != tt.issue {
 				t.Errorf("Issue error: got %v, expected %v", c.Issue, tt.issue)
+			}
+			if !almostEqual(c.Estimate, tt.estimate) {
+				t.Errorf("Estimate error: got %v, expected %v", c.Estimate, tt.estimate)
 			}
 		})
 	}

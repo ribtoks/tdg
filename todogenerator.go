@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,22 +15,31 @@ import (
 	"github.com/zieckey/goini"
 )
 
+const (
+	estimateEpsilon = 0.01
+)
+
 var (
-	commentPrefixes = [...]string{"TODO: ", "FIXME: ", "BUG: ", "HACK: "}
-	emptyRunes      = [...]rune{}
-	categoryIniKey  = "category"
-	issueIniKey     = "issue"
+	commentPrefixes        = [...]string{"TODO: ", "FIXME: ", "BUG: ", "HACK: "}
+	emptyRunes             = [...]rune{}
+	categoryIniKey         = "category"
+	issueIniKey            = "issue"
+	estimateIniKey         = "estimate"
+	errCannotParseIni      = errors.New("Cannot parse ini properties")
+	errCannotParseEstimate = errors.New("Cannot parse time estimate")
 )
 
 // ToDoComment a task that is parsed from TODO comment
+// estimate is in hours
 type ToDoComment struct {
-	Type     string `json:"type"`
-	Title    string `json:"title"`
-	Body     string `json:"body"`
-	File     string `json:"file"`
-	Line     int    `json:"line"`
-	Issue    int    `json:"issue,omitempty"`
-	Category string `json:"category,omitempty"`
+	Type     string  `json:"type"`
+	Title    string  `json:"title"`
+	Body     string  `json:"body"`
+	File     string  `json:"file"`
+	Line     int     `json:"line"`
+	Issue    int     `json:"issue,omitempty"`
+	Category string  `json:"category,omitempty"`
+	Estimate float64 `json:"estimate,omitempty"`
 }
 
 // ToDoGenerator is responsible for parsing code base to ToDoComments
@@ -195,48 +205,87 @@ func parseToDoTitle(line []rune) (ctype, title []rune) {
 	return nil, nil
 }
 
+// parseEstimate parses human-readible hours or minutes
+// estimate to float64 in hours
+func parseEstimate(estimate string) (float64, error) {
+	if len(estimate) == 0 {
+		return 0, errCannotParseEstimate
+	}
+	var s string
+	last := rune(estimate[len(estimate)-1])
+	if unicode.IsLetter(last) && last != 'm' && last != 'h' {
+		return 0, errCannotParseEstimate
+	}
+
+	if unicode.IsLetter(last) {
+		s = estimate[:len(estimate)-1]
+	} else {
+		s = estimate
+	}
+
+	if f, err := strconv.ParseFloat(s, 64); err == nil {
+		if last == 'm' {
+			return f / 60.0, nil
+		}
+		return f, nil
+	}
+	return 0, errCannotParseEstimate
+}
+
+func (t *ToDoComment) parseIniProperties(line string) error {
+	if !strings.Contains(line, "=") {
+		return errCannotParseIni
+	}
+	ini := goini.New()
+	err := ini.Parse([]byte(line), " ", "=")
+	if err != nil {
+		return err
+	}
+	if v, ok := ini.Get(categoryIniKey); ok {
+		t.Category = v
+	}
+	if v, ok := ini.Get(issueIniKey); ok {
+		if i, err := strconv.Atoi(v); err == nil {
+			t.Issue = i
+		}
+	}
+	if v, ok := ini.Get(estimateIniKey); ok {
+		if f, err := parseEstimate(v); err == nil {
+			t.Estimate = f
+		}
+	}
+	if len(t.Category) == 0 &&
+		t.Issue == 0 &&
+		t.Estimate < estimateEpsilon {
+		return errCannotParseIni
+	}
+	return nil
+}
+
 // NewComment creates new task from parsed comment lines
 func NewComment(path string, lineNumber int, ctype string, body []string) *ToDoComment {
 	if body == nil || len(body) == 0 {
 		return nil
 	}
-	var commentBody string
-	var issue int
-	var category string
+
+	t := &ToDoComment{
+		Type:  string(ctype),
+		Title: body[0],
+		File:  path,
+		Line:  lineNumber,
+	}
 
 	if len(body) > 1 {
-		if strings.Contains(body[1], "=") {
-			ini := goini.New()
-			err := ini.Parse([]byte(body[1]), " ", "=")
-			if err == nil {
-				if v, ok := ini.Get(categoryIniKey); ok {
-					category = v
-				}
-				if v, ok := ini.Get(issueIniKey); ok {
-					if i, err := strconv.Atoi(v); err == nil {
-						issue = i
-					}
-				}
-			} else {
-				log.Print(err)
-			}
-		}
-		if len(category) > 0 || issue > 0 {
+		var commentBody string
+		if err := t.parseIniProperties(body[1]); err == nil {
 			commentBody = strings.Join(body[2:], "\n")
 		} else {
 			commentBody = strings.Join(body[1:], "\n")
 		}
-		commentBody = strings.TrimSpace(commentBody)
+		t.Body = strings.TrimSpace(commentBody)
 	}
-	return &ToDoComment{
-		Type:     string(ctype),
-		Title:    body[0],
-		Body:     commentBody,
-		File:     path,
-		Line:     lineNumber,
-		Category: category,
-		Issue:    issue,
-	}
+
+	return t
 }
 
 func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype string, body []string) {

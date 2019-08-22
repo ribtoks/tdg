@@ -18,7 +18,7 @@ This tool generates json from comments contained in the source code. Main use-ca
 Example of the comment:
 
     // TODO: This is title of the issue to create
-    // category=SomeCategory issue=123
+    // category=SomeCategory issue=123 estimate=30m
     // This is a multiline description of the issue
     // that will be in the "Body" property of the comment
 
@@ -37,7 +37,8 @@ Sample generated json (if run in this repository root as `tdg -verbose`):
           "file": "README.md",
           "line": 19,
           "issue": 123,
-          "category": "SomeCategory"
+          "category": "SomeCategory",
+          "estimate": 0.5
         }
       ]
     }
