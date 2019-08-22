@@ -47,14 +47,13 @@ type ToDoComment struct {
 
 // ToDoGenerator is responsible for parsing code base to ToDoComments
 type ToDoGenerator struct {
-	root         string
-	filters      []*regexp.Regexp
-	commentsChan chan *ToDoComment
-	commentsWG   sync.WaitGroup
-	comments     []*ToDoComment
-	minWords     int
-	addedMap     map[string]bool
-	commentMux   sync.Mutex
+	root       string
+	filters    []*regexp.Regexp
+	commentsWG sync.WaitGroup
+	comments   []*ToDoComment
+	minWords   int
+	addedMap   map[string]bool
+	commentMux sync.Mutex
 }
 
 // NewToDoGenerator creates new generator for a source root
@@ -70,14 +69,12 @@ func NewToDoGenerator(root string, filters []string, minWords int) *ToDoGenerato
 		absolutePath = root
 	}
 	td := &ToDoGenerator{
-		root:         absolutePath,
-		filters:      rfilters,
-		minWords:     minWords,
-		commentsChan: make(chan *ToDoComment),
-		comments:     make([]*ToDoComment, 0),
-		addedMap:     make(map[string]bool),
+		root:     absolutePath,
+		filters:  rfilters,
+		minWords: minWords,
+		comments: make([]*ToDoComment, 0),
+		addedMap: make(map[string]bool),
 	}
-	go td.processComments()
 	return td
 }
 
@@ -117,7 +114,6 @@ func (td *ToDoGenerator) Generate() ([]*ToDoComment, error) {
 
 	log.Printf("Matched files: %v", matchesCount)
 	td.commentsWG.Wait()
-	close(td.commentsChan)
 	return td.comments, nil
 }
 
@@ -151,12 +147,6 @@ func (td *ToDoGenerator) addComment(c *ToDoComment) {
 	if countTitleWords(c.Title) >= td.minWords {
 		td.addedMap[s] = true
 		td.comments = append(td.comments, c)
-	}
-}
-
-func (td *ToDoGenerator) processComments() {
-	for c := range td.commentsChan {
-		go td.addComment(c)
 	}
 }
 
@@ -321,9 +311,7 @@ func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype strin
 	}
 	c := NewComment(relativePath, lineNumber, ctype, body)
 	td.commentsWG.Add(1)
-	go func(cmt *ToDoComment) {
-		td.commentsChan <- cmt
-	}(c)
+	go td.addComment(c)
 }
 
 func (td *ToDoGenerator) parseFile(path string) {
