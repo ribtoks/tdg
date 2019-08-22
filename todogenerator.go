@@ -54,6 +54,7 @@ type ToDoGenerator struct {
 	comments     []*ToDoComment
 	minWords     int
 	addedMap     map[string]bool
+	commentMux   sync.Mutex
 }
 
 // NewToDoGenerator creates new generator for a source root
@@ -132,24 +133,30 @@ func countTitleWords(s string) int {
 }
 
 func (td *ToDoGenerator) addComment(c *ToDoComment) {
+	defer td.commentsWG.Done()
+
 	h := md5.New()
 	io.WriteString(h, c.Title)
 	io.WriteString(h, c.Body)
 	s := hex.EncodeToString(h.Sum(nil))
+
+	td.commentMux.Lock()
+	defer td.commentMux.Unlock()
+
 	if _, ok := td.addedMap[s]; ok {
 		log.Printf("Skipping comment duplicate in %v:%v", c.File, c.Line)
 		return
 	}
+
 	if countTitleWords(c.Title) >= td.minWords {
-		td.comments = append(td.comments, c)
 		td.addedMap[s] = true
+		td.comments = append(td.comments, c)
 	}
 }
 
 func (td *ToDoGenerator) processComments() {
 	for c := range td.commentsChan {
-		td.addComment(c)
-		td.commentsWG.Done()
+		go td.addComment(c)
 	}
 }
 

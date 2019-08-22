@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 type arrayFlags []string
@@ -50,7 +51,11 @@ func main() {
 
 	env := NewEnvironment(*srcRootFlag)
 	td := NewToDoGenerator(*srcRootFlag, includePatternsFlag, *minWordCountFlag)
+	start := time.Now()
 	comments, err := td.Generate()
+	elapsed := time.Since(start)
+	log.Printf("Generation took %s", elapsed)
+
 	if err != nil {
 		log.Fatal(err)
 	}
