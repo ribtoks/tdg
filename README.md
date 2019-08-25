@@ -15,7 +15,7 @@ TODO get - tool to extract todo tasks from source code
 
 This tool generates json from comments contained in the source code. Main use-case for it is to create automatic issues based on TODO/FIXME/BUG/HACK comments. This tool supports additional tag information in the comment (Category, Issue etc.).
 
-Example of the comment:
+Example of the comment (everything but the first line is optional):
 
     // TODO: This is title of the issue to create
     // category=SomeCategory issue=123 estimate=30m
