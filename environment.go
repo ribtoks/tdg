@@ -94,7 +94,8 @@ func (env *Environment) Author() string {
 func (env *Environment) Project() string {
 	env.initProject.Do(func() {
 		project := env.Run("git", "rev-parse", "--show-toplevel")
-		env.project = env.Run("basename", project)
+		// env.project = env.Run("basename", project)
+		env.project = filepath.Base(project)
 	})
 	return env.project
 }
