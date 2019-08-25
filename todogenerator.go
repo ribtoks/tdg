@@ -52,12 +52,13 @@ type ToDoGenerator struct {
 	commentsWG sync.WaitGroup
 	comments   []*ToDoComment
 	minWords   int
+	minChars   int
 	addedMap   map[string]bool
 	commentMux sync.Mutex
 }
 
 // NewToDoGenerator creates new generator for a source root
-func NewToDoGenerator(root string, filters []string, minWords int) *ToDoGenerator {
+func NewToDoGenerator(root string, filters []string, minWords, minChars int) *ToDoGenerator {
 	log.Printf("Using %v filters", filters)
 	rfilters := make([]*regexp.Regexp, 0, len(filters))
 	for _, f := range filters {
@@ -72,6 +73,7 @@ func NewToDoGenerator(root string, filters []string, minWords int) *ToDoGenerato
 		root:     absolutePath,
 		filters:  rfilters,
 		minWords: minWords,
+		minChars: minChars,
 		comments: make([]*ToDoComment, 0),
 		addedMap: make(map[string]bool),
 	}
@@ -144,9 +146,11 @@ func (td *ToDoGenerator) addComment(c *ToDoComment) {
 		return
 	}
 
-	if countTitleWords(c.Title) >= td.minWords {
+	if countTitleWords(c.Title) >= td.minWords || len(c.Title) >= td.minChars {
 		td.addedMap[s] = true
 		td.comments = append(td.comments, c)
+	} else {
+		log.Printf("Ignoring comment in %v:%v", c.File, c.Line)
 	}
 }
 
@@ -310,8 +314,10 @@ func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype strin
 		relativePath = path
 	}
 	c := NewComment(relativePath, lineNumber, ctype, body)
-	td.commentsWG.Add(1)
-	go td.addComment(c)
+	if c != nil {
+		td.commentsWG.Add(1)
+		go td.addComment(c)
+	}
 }
 
 func (td *ToDoGenerator) parseFile(path string) {
