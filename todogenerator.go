@@ -61,7 +61,7 @@ type ToDoGenerator struct {
 }
 
 // NewToDoGenerator creates new generator for a source root
-func NewToDoGenerator(root string, filters []string, minWords, minChars int, withBlame bool) *ToDoGenerator {
+func NewToDoGenerator(root string, filters []string, minWords, minChars int) *ToDoGenerator {
 	log.Printf("Using %v filters", filters)
 	rfilters := make([]*regexp.Regexp, 0, len(filters))
 	for _, f := range filters {
@@ -73,13 +73,12 @@ func NewToDoGenerator(root string, filters []string, minWords, minChars int, wit
 		absolutePath = root
 	}
 	td := &ToDoGenerator{
-		root:      absolutePath,
-		filters:   rfilters,
-		minWords:  minWords,
-		minChars:  minChars,
-		comments:  make([]*ToDoComment, 0),
-		addedMap:  make(map[string]bool),
-		withBlame: withBlame,
+		root:     absolutePath,
+		filters:  rfilters,
+		minWords: minWords,
+		minChars: minChars,
+		comments: make([]*ToDoComment, 0),
+		addedMap: make(map[string]bool),
 	}
 	return td
 }
