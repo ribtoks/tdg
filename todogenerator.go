@@ -119,6 +119,7 @@ func (td *ToDoGenerator) Generate() ([]*ToDoComment, error) {
 
 	log.Printf("Matched files: %v", matchesCount)
 	td.commentsWG.Wait()
+	log.Printf("Found comments: %v", len(td.comments))
 	return td.comments, nil
 }
 
