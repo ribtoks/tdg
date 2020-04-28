@@ -18,14 +18,14 @@ This tool generates json from comments contained in the source code. Main use-ca
 Example of the comment (everything but the first line is optional):
 
     // TODO: This is title of the issue to create
-    // category=SomeCategory issue=123 estimate=30m
+    // category=SomeCategory issue=123 estimate=30m author=alias
     // This is a multiline description of the issue
     // that will be in the "Body" property of the comment
 
 Sample generated json (if run in this repository root as `tdg -verbose`):
 
     {
-      "root": "/Users/ribtoks/go/src/github.com/ribtoks/tdg",
+      "root": "/Users/ribtoks/Projects/go/src/github.com/ribtoks/tdg",
       "branch": "master",
       "author": "Taras Kushnir",
       "project": "tdg",
@@ -37,6 +37,7 @@ Sample generated json (if run in this repository root as `tdg -verbose`):
           "file": "README.md",
           "line": 19,
           "issue": 123,
+          "author": "alias",
           "category": "SomeCategory",
           "estimate": 0.5
         }
@@ -49,7 +50,7 @@ Supported comments: `//`, `/*`, `#`, `%`, `;;` (adding new supported comments is
 
 As simple as
 
-    go get github.com/ribtoks/tdg
+    go get -u github.com/ribtoks/tdg
 
 ## Build
 

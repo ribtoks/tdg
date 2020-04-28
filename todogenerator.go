@@ -28,6 +28,7 @@ var (
 	categoryIniKey         = "category"
 	issueIniKey            = "issue"
 	estimateIniKey         = "estimate"
+	authorIniKey           = "author"
 	errCannotParseIni      = errors.New("Cannot parse ini properties")
 	errCannotParseEstimate = errors.New("Cannot parse time estimate")
 )
@@ -41,6 +42,7 @@ type ToDoComment struct {
 	File     string  `json:"file"`
 	Line     int     `json:"line"`
 	Issue    int     `json:"issue,omitempty"`
+	Author   string  `json:"author,omitempty"`
 	Category string  `json:"category,omitempty"`
 	Estimate float64 `json:"estimate,omitempty"`
 }
@@ -55,10 +57,11 @@ type ToDoGenerator struct {
 	minChars   int
 	addedMap   map[string]bool
 	commentMux sync.Mutex
+	withBlame  bool
 }
 
 // NewToDoGenerator creates new generator for a source root
-func NewToDoGenerator(root string, filters []string, minWords, minChars int) *ToDoGenerator {
+func NewToDoGenerator(root string, filters []string, minWords, minChars int, withBlame bool) *ToDoGenerator {
 	log.Printf("Using %v filters", filters)
 	rfilters := make([]*regexp.Regexp, 0, len(filters))
 	for _, f := range filters {
@@ -70,12 +73,13 @@ func NewToDoGenerator(root string, filters []string, minWords, minChars int) *To
 		absolutePath = root
 	}
 	td := &ToDoGenerator{
-		root:     absolutePath,
-		filters:  rfilters,
-		minWords: minWords,
-		minChars: minChars,
-		comments: make([]*ToDoComment, 0),
-		addedMap: make(map[string]bool),
+		root:      absolutePath,
+		filters:   rfilters,
+		minWords:  minWords,
+		minChars:  minChars,
+		comments:  make([]*ToDoComment, 0),
+		addedMap:  make(map[string]bool),
+		withBlame: withBlame,
 	}
 	return td
 }
@@ -206,9 +210,9 @@ func startsWith(s, pr []rune) bool {
 	return true
 }
 
-func parseToDoTitle(line []rune) (ctype, title []rune) {
+func parseToDoTitle(line []rune) (ctype, title, author []rune) {
 	if len(line) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 	size := len(line)
 
@@ -219,7 +223,15 @@ func parseToDoTitle(line []rune) (ctype, title []rune) {
 			if unicode.IsLetter(line[i]) {
 				continue
 			}
-			// skip ":" or "(author):"
+			ctype = []rune(pr)[:prlen]
+
+			if line[i] == '(' {
+				for i < size && line[i] != ')' {
+					i++
+				}
+				author = line[prlen+1 : i]
+			}
+
 			for i < size &&
 				!unicode.IsSpace(line[i]) &&
 				line[i] != ':' {
@@ -231,14 +243,13 @@ func parseToDoTitle(line []rune) (ctype, title []rune) {
 			}
 
 			if i < size {
-				ctype = []rune(pr)[:prlen]
 				title = line[i:]
 				return
 			}
 		}
 	}
 
-	return nil, nil
+	return nil, nil, nil
 }
 
 // parseEstimate parses human-readible hours or minutes
@@ -280,6 +291,11 @@ func (t *ToDoComment) parseIniProperties(line string) error {
 	if v, ok := ini.Get(categoryIniKey); ok {
 		t.Category = v
 	}
+	if v, ok := ini.Get(authorIniKey); ok {
+		if len(t.Author) == 0 {
+			t.Author = v
+		}
+	}
 	if v, ok := ini.Get(issueIniKey); ok {
 		if i, err := strconv.Atoi(v); err == nil {
 			t.Issue = i
@@ -290,6 +306,7 @@ func (t *ToDoComment) parseIniProperties(line string) error {
 			t.Estimate = f
 		}
 	}
+
 	if len(t.Category) == 0 &&
 		t.Issue == 0 &&
 		t.Estimate < estimateEpsilon {
@@ -299,16 +316,17 @@ func (t *ToDoComment) parseIniProperties(line string) error {
 }
 
 // NewComment creates new task from parsed comment lines
-func NewComment(path string, lineNumber int, ctype string, body []string) *ToDoComment {
+func NewComment(path string, lineNumber int, ctype, author string, body []string) *ToDoComment {
 	if body == nil || len(body) == 0 {
 		return nil
 	}
 
 	t := &ToDoComment{
-		Type:  string(ctype),
-		Title: body[0],
-		File:  path,
-		Line:  lineNumber,
+		Type:   ctype,
+		Title:  body[0],
+		File:   path,
+		Line:   lineNumber,
+		Author: author,
 	}
 
 	if len(body) > 1 {
@@ -324,13 +342,13 @@ func NewComment(path string, lineNumber int, ctype string, body []string) *ToDoC
 	return t
 }
 
-func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype string, body []string) {
+func (td *ToDoGenerator) accountComment(path string, lineNumber int, ctype, author string, body []string) {
 
 	relativePath, err := filepath.Rel(td.root, path)
 	if err != nil {
 		relativePath = path
 	}
-	c := NewComment(relativePath, lineNumber, ctype, body)
+	c := NewComment(relativePath, lineNumber, ctype, author, body)
 	if c != nil {
 		td.commentsWG.Add(1)
 		go td.addComment(c)
@@ -348,6 +366,7 @@ func (td *ToDoGenerator) parseFile(path string) {
 	scanner := bufio.NewScanner(f)
 	var todo []string
 	var lastType string
+	var lastAuthor string
 	var lastStart int
 	lineNumber := 0
 	for scanner.Scan() {
@@ -355,12 +374,13 @@ func (td *ToDoGenerator) parseFile(path string) {
 		lineNumber++
 		if c := parseComment(line); c != nil {
 			// current comment is new TODO-like commment
-			if ctype, title := parseToDoTitle(c); title != nil {
+			if ctype, title, author := parseToDoTitle(c); title != nil {
 				// do we need to finalize previous
 				if lastType != "" {
-					td.accountComment(path, lastStart, lastType, todo)
+					td.accountComment(path, lastStart, lastType, lastAuthor, todo)
 				}
 				// construct new one
+				lastAuthor = string(author)
 				lastType = string(ctype)
 				lastStart = lineNumber - 1
 				todo = make([]string, 0)
@@ -372,13 +392,13 @@ func (td *ToDoGenerator) parseFile(path string) {
 		} else {
 			// not a comment anymore: finalize
 			if lastType != "" {
-				td.accountComment(path, lastStart, lastType, todo)
+				td.accountComment(path, lastStart, lastType, lastAuthor, todo)
 				lastType = ""
 			}
 		}
 	}
 	// detect todo item at the end of the file
 	if lastType != "" {
-		td.accountComment(path, lastStart, lastType, todo)
+		td.accountComment(path, lastStart, lastType, lastAuthor, todo)
 	}
 }

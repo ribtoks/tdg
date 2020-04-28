@@ -65,32 +65,36 @@ func TestStartsWith(t *testing.T) {
 }
 
 var todoLineTests = []struct {
-	in    string
-	ctype string
-	title string
+	in     string
+	ctype  string
+	title  string
+	author string
 }{
-	{"TODO: test code", "TODO", "test code"},
-	{"TODO test code", "TODO", "test code"},
-	{"TODOtest code", "", ""},
-	{"FIXME: test code", "FIXME", "test code"},
-	{"BUG: test code", "BUG", "test code"},
-	{"BUG  test code", "BUG", "test code"},
-	{"HACK: test code", "HACK", "test code"},
-	{"HACK:test code", "HACK", "test code"},
-	{"TODO(author): test code", "TODO", "test code"},
-	{"HACK(author): test code", "HACK", "test code"},
-	{"BUG(author): test code", "BUG", "test code"},
+	{"TODO: test code", "TODO", "test code", ""},
+	{"TODO test code", "TODO", "test code", ""},
+	{"TODOtest code", "", "", ""},
+	{"FIXME: test code", "FIXME", "test code", ""},
+	{"BUG: test code", "BUG", "test code", ""},
+	{"BUG  test code", "BUG", "test code", ""},
+	{"HACK: test code", "HACK", "test code", ""},
+	{"HACK:test code", "HACK", "test code", ""},
+	{"TODO(author): test code", "TODO", "test code", "author"},
+	{"HACK(author): test code", "HACK", "test code", "author"},
+	{"BUG(author): test code", "BUG", "test code", "author"},
 }
 
 func TestTodoTitle(t *testing.T) {
 	for _, tt := range todoLineTests {
 		t.Run(tt.in, func(t *testing.T) {
-			ctype, title := parseToDoTitle([]rune(tt.in))
+			ctype, title, author := parseToDoTitle([]rune(tt.in))
 			if string(ctype) != tt.ctype {
 				t.Errorf("Test(%v): got %v, expected %v", tt.in, string(ctype), tt.ctype)
 			}
 			if string(title) != tt.title {
 				t.Errorf("Test(%v): got %v, expected %v", tt.in, string(title), tt.title)
+			}
+			if string(author) != tt.author {
+				t.Errorf("Test(%v): got %v, expected %v", tt.in, string(author), tt.author)
 			}
 		})
 	}
@@ -105,25 +109,26 @@ var commentConstructorTests = []struct {
 	title    string
 	body     string
 	category string
+	author   string
 	issue    int
 	estimate float64
 }{
-	{[]string{"issue title"}, "issue title", "", "", 0, 0.0},
-	{[]string{"issue title", "category=Test"}, "issue title", "", "Test", 0, 0.0},
-	{[]string{"issue title", "issue=123"}, "issue title", "", "", 123, 0.0},
-	{[]string{"issue title", "estimate=30m"}, "issue title", "", "", 0, 0.5},
-	{[]string{"issue title", "estimate=30x"}, "issue title", "estimate=30x", "", 0, 0.0},
-	{[]string{"issue title", "estimate=30h"}, "issue title", "", "", 0, 30},
-	{[]string{"issue title", "  category=Test issue=123 estimate=60m "}, "issue title", "", "Test", 123, 1.0},
-	{[]string{"issue title", "issue=123", "third line"}, "issue title", "third line", "", 123, 0.0},
-	{[]string{"issue title", "second line"}, "issue title", "second line", "", 0, 0.0},
-	{[]string{"issue title", "second line", "third line"}, "issue title", "second line\nthird line", "", 0, 0.0},
+	{[]string{"issue title"}, "issue title", "", "", "", 0, 0.0},
+	{[]string{"issue title", "category=Test"}, "issue title", "", "Test", "", 0, 0.0},
+	{[]string{"issue title", "issue=123"}, "issue title", "", "", "", 123, 0.0},
+	{[]string{"issue title", "estimate=30m"}, "issue title", "", "", "", 0, 0.5},
+	{[]string{"issue title", "estimate=30x"}, "issue title", "estimate=30x", "", "", 0, 0.0},
+	{[]string{"issue title", "estimate=30h"}, "issue title", "", "", "", 0, 30},
+	{[]string{"issue title", "  category=Test issue=123 estimate=60m author=Me "}, "issue title", "", "Test", "Me", 123, 1.0},
+	{[]string{"issue title", "issue=123", "third line"}, "issue title", "third line", "", "", 123, 0.0},
+	{[]string{"issue title", "second line"}, "issue title", "second line", "", "", 0, 0.0},
+	{[]string{"issue title", "second line", "third line"}, "issue title", "second line\nthird line", "", "", 0, 0.0},
 }
 
 func TestNewComment(t *testing.T) {
 	for i, tt := range commentConstructorTests {
 		t.Run(fmt.Sprintf("test_%v", i), func(t *testing.T) {
-			c := NewComment("/path/", 0, "ctype", tt.in)
+			c := NewComment("/path/", 0, "ctype", "author", tt.in)
 			if c.Title != tt.title {
 				t.Errorf("Title error: got %v, expected %v", c.Title, tt.title)
 			}

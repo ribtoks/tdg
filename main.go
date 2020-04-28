@@ -34,6 +34,7 @@ var (
 	verboseFlag         = flag.Bool("verbose", false, "Output human-readable json")
 	minWordCountFlag    = flag.Int("min-words", 3, "Skip comments with less than minimum words")
 	minCharsFlag        = flag.Int("min-chars", 30, "Include comments with more chars than this")
+	blameFlag           = flag.Bool("blame", false, "Use git blame to get commit info")
 	stdoutFlag          = flag.Bool("stdout", false, "Duplicate logs to stdout")
 	logPathFlag         = flag.String("log", "tdg.log", "Path to the logfile")
 )
@@ -51,7 +52,11 @@ func main() {
 	}
 
 	env := NewEnvironment(*srcRootFlag)
-	td := NewToDoGenerator(*srcRootFlag, includePatternsFlag, *minWordCountFlag, *minCharsFlag)
+	td := NewToDoGenerator(*srcRootFlag,
+		includePatternsFlag,
+		*minWordCountFlag,
+		*minCharsFlag,
+		*blameFlag)
 	start := time.Now()
 	comments, err := td.Generate()
 	elapsed := time.Since(start)
