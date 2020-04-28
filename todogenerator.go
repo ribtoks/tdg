@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	commentPrefixes        = [...]string{"TODO: ", "FIXME: ", "BUG: ", "HACK: "}
+	commentPrefixes        = [...]string{"TODO", "FIXME", "BUG", "HACK"}
 	emptyRunes             = [...]rune{}
 	categoryIniKey         = "category"
 	issueIniKey            = "issue"
@@ -207,17 +207,34 @@ func startsWith(s, pr []rune) bool {
 }
 
 func parseToDoTitle(line []rune) (ctype, title []rune) {
-	if line == nil || len(line) == 0 {
+	if len(line) == 0 {
 		return nil, nil
 	}
 	size := len(line)
+
 	for _, pr := range commentPrefixes {
 		prlen := len(pr)
 		if size > prlen && startsWith(line, []rune(pr)) {
-			// without last ':<space>'
-			ctype = []rune(pr)[:prlen-2]
-			title = line[prlen:]
-			return
+			i := prlen
+			if unicode.IsLetter(line[i]) {
+				continue
+			}
+			// skip ":" or "(author):"
+			for i < size &&
+				!unicode.IsSpace(line[i]) &&
+				line[i] != ':' {
+				i++
+			}
+
+			for i < size && (unicode.IsSpace(line[i]) || line[i] == ':') {
+				i++
+			}
+
+			if i < size {
+				ctype = []rune(pr)[:prlen]
+				title = line[i:]
+				return
+			}
 		}
 	}
 

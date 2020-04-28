@@ -22,6 +22,7 @@ var commentTests = []struct {
 	{"/** test contents ", "test contents"},
 	{"// TODO: test contents", "TODO: test contents"},
 	{"//TODO: test contents\t", "TODO: test contents"},
+	{"//TODO(author): test contents", "TODO(author): test contents"},
 }
 
 func TestParseComment(t *testing.T) {
@@ -43,19 +44,21 @@ var startsWithTests = []struct {
 	prefix string
 	out    bool
 }{
-	{"TODO: test code", "TODO: ", true},
-	{"TODO: test code", "HACK: ", false},
-	{"ToDo: test code", "TODO: ", true},
-	{"todo: test code", "TODO: ", true},
-	{"BUG: test code", "BUG: ", true},
-	{"BUG:test code", "BUG: ", false},
+	{"TODO: test code", "TODO", true},
+	{"TODO(author): test code", "TODO", true},
+	{"TODO: test code", "HACK", false},
+	{"ToDo: test code", "TODO", true},
+	{"todo: test code", "TODO", true},
+	{"BUG: test code", "BUG", true},
+	{"BUG:test code", "BUG", true},
+	{"BUG(author):test code", "BUG", true},
 }
 
 func TestStartsWith(t *testing.T) {
 	for _, tt := range startsWithTests {
 		t.Run(tt.in, func(t *testing.T) {
 			if startsWith([]rune(tt.in), []rune(tt.prefix)) != tt.out {
-				t.Errorf("got %v, expected %v", !tt.out, tt.out)
+				t.Errorf("Test(%v): got %v, expected %v", tt.in, !tt.out, tt.out)
 			}
 		})
 	}
@@ -67,10 +70,16 @@ var todoLineTests = []struct {
 	title string
 }{
 	{"TODO: test code", "TODO", "test code"},
+	{"TODO test code", "TODO", "test code"},
+	{"TODOtest code", "", ""},
 	{"FIXME: test code", "FIXME", "test code"},
 	{"BUG: test code", "BUG", "test code"},
+	{"BUG  test code", "BUG", "test code"},
 	{"HACK: test code", "HACK", "test code"},
-	{"HACK:test code", "", ""},
+	{"HACK:test code", "HACK", "test code"},
+	{"TODO(author): test code", "TODO", "test code"},
+	{"HACK(author): test code", "HACK", "test code"},
+	{"BUG(author): test code", "BUG", "test code"},
 }
 
 func TestTodoTitle(t *testing.T) {
@@ -78,10 +87,10 @@ func TestTodoTitle(t *testing.T) {
 		t.Run(tt.in, func(t *testing.T) {
 			ctype, title := parseToDoTitle([]rune(tt.in))
 			if string(ctype) != tt.ctype {
-				t.Errorf("got %v, expected %v", string(ctype), tt.ctype)
+				t.Errorf("Test(%v): got %v, expected %v", tt.in, string(ctype), tt.ctype)
 			}
 			if string(title) != tt.title {
-				t.Errorf("got %v, expected %v", string(ctype), tt.ctype)
+				t.Errorf("Test(%v): got %v, expected %v", tt.in, string(title), tt.title)
 			}
 		})
 	}
