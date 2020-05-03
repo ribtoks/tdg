@@ -20,6 +20,7 @@ import (
 
 const (
 	estimateEpsilon = 0.01
+	minTitleWords   = 2
 )
 
 var (
@@ -50,37 +51,76 @@ type ToDoComment struct {
 // ToDoGenerator is responsible for parsing code base to ToDoComments
 type ToDoGenerator struct {
 	root       string
-	filters    []*regexp.Regexp
+	include    []*regexp.Regexp
+	exclude    []*regexp.Regexp
 	commentsWG sync.WaitGroup
 	comments   []*ToDoComment
 	minWords   int
 	minChars   int
 	addedMap   map[string]bool
 	commentMux sync.Mutex
-	withBlame  bool
 }
 
 // NewToDoGenerator creates new generator for a source root
-func NewToDoGenerator(root string, filters []string, minWords, minChars int) *ToDoGenerator {
-	log.Printf("Using %v filters", filters)
-	rfilters := make([]*regexp.Regexp, 0, len(filters))
-	for _, f := range filters {
-		rfilters = append(rfilters, regexp.MustCompile(f))
+func NewToDoGenerator(root string, include []string, exclude []string, minWords, minChars int) *ToDoGenerator {
+	log.Printf("Using %v include filters", include)
+	ifilters := make([]*regexp.Regexp, 0, len(include))
+	for _, f := range include {
+		ifilters = append(ifilters, regexp.MustCompile(f))
 	}
+
+	log.Printf("Using %v exclude filters", exclude)
+	efilters := make([]*regexp.Regexp, 0, len(exclude))
+	for _, f := range exclude {
+		efilters = append(efilters, regexp.MustCompile(f))
+	}
+
 	absolutePath, err := filepath.Abs(root)
 	if err != nil {
 		log.Printf("Error setting generator root: %v", err)
+
 		absolutePath = root
 	}
-	td := &ToDoGenerator{
+
+	return &ToDoGenerator{
 		root:     absolutePath,
-		filters:  rfilters,
+		include:  ifilters,
+		exclude:  efilters,
 		minWords: minWords,
 		minChars: minChars,
 		comments: make([]*ToDoComment, 0),
 		addedMap: make(map[string]bool),
 	}
-	return td
+}
+
+func (td *ToDoGenerator) Includes(path string) bool {
+	anyMatch := false
+
+	for _, f := range td.include {
+		if f.MatchString(path) {
+			anyMatch = true
+			break
+		}
+	}
+
+	if !anyMatch && len(td.include) > 0 {
+		return false
+	}
+
+	return true
+}
+
+func (td *ToDoGenerator) Excludes(path string) bool {
+	anyMatch := false
+
+	for _, f := range td.exclude {
+		if f.MatchString(path) {
+			anyMatch = true
+			break
+		}
+	}
+
+	return anyMatch
 }
 
 // Generate is an entry point to comment generation
@@ -95,14 +135,22 @@ func (td *ToDoGenerator) Generate() ([]*ToDoComment, error) {
 			return nil
 		}
 
+		if !td.Includes(path) {
+			return nil
+		}
+
+		if td.Excludes(path) {
+			return nil
+		}
+
 		anyMatch := false
-		for _, f := range td.filters {
+		for _, f := range td.include {
 			if f.MatchString(path) {
 				anyMatch = true
 				break
 			}
 		}
-		if !anyMatch && len(td.filters) > 0 {
+		if !anyMatch && len(td.include) > 0 {
 			return nil
 		}
 
@@ -120,17 +168,20 @@ func (td *ToDoGenerator) Generate() ([]*ToDoComment, error) {
 	log.Printf("Matched files: %v", matchesCount)
 	td.commentsWG.Wait()
 	log.Printf("Found comments: %v", len(td.comments))
+
 	return td.comments, nil
 }
 
 func countTitleWords(s string) int {
 	words := strings.Fields(s)
 	count := 0
+
 	for _, w := range words {
-		if len(w) > 2 {
+		if len(w) > minTitleWords {
 			count++
 		}
 	}
+
 	return count
 }
 
@@ -175,12 +226,14 @@ func parseComment(line string) []rune {
 	for i < size && unicode.IsSpace(runes[i]) {
 		i++
 	}
+
 	hasComment := false
 	// skip comment symbols themselves
 	for i < size && isCommentRune(runes[i]) {
 		i++
 		hasComment = true
 	}
+
 	if !hasComment {
 		return nil
 	}
@@ -188,15 +241,18 @@ func parseComment(line string) []rune {
 	for i < size && unicode.IsSpace(runes[i]) {
 		i++
 	}
+
 	j := size - 1
 	// skip suffix whitespace
 	for j > i && unicode.IsSpace(runes[j]) {
 		j--
 	}
+
 	// empty comment
 	if i >= size || j < 0 || i >= j {
 		return emptyRunes[:]
 	}
+
 	return runes[i : j+1]
 }
 
@@ -207,6 +263,7 @@ func startsWith(s, pr []rune) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -214,6 +271,7 @@ func parseToDoTitle(line []rune) (ctype, title, author []rune) {
 	if len(line) == 0 {
 		return nil, nil, nil
 	}
+
 	size := len(line)
 
 	for _, pr := range commentPrefixes {
@@ -223,12 +281,14 @@ func parseToDoTitle(line []rune) (ctype, title, author []rune) {
 			if unicode.IsLetter(line[i]) {
 				continue
 			}
+
 			ctype = []rune(pr)[:prlen]
 
 			if line[i] == '(' {
 				for i < size && line[i] != ')' {
 					i++
 				}
+
 				author = line[prlen+1 : i]
 			}
 

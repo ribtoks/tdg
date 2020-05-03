@@ -29,6 +29,7 @@ const (
 
 var (
 	includePatternsFlag arrayFlags
+	excludePatternsFlag arrayFlags
 	srcRootFlag         = flag.String("root", "./", "Path to the the root of source code")
 	helpFlag            = flag.Bool("help", false, "Show help")
 	verboseFlag         = flag.Bool("verbose", false, "Output human-readable json")
@@ -53,6 +54,7 @@ func main() {
 	env := NewEnvironment(*srcRootFlag)
 	td := NewToDoGenerator(*srcRootFlag,
 		includePatternsFlag,
+		excludePatternsFlag,
 		*minWordCountFlag,
 		*minCharsFlag)
 	start := time.Now()
