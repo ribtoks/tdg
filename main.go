@@ -93,6 +93,7 @@ func main() {
 
 func parseFlags() error {
 	flag.Var(&includePatternsFlag, "include", "Include pattern (can be specified multiple times)")
+	flag.Var(&excludePatternsFlag, "exclude", "Exclude pattern (can be specified multiple times)")
 	flag.Parse()
 	if *helpFlag {
 		flag.PrintDefaults()

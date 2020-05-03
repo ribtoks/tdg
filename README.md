@@ -60,22 +60,24 @@ As simple as
 
 ## Usage
 
+    -exclude value
+      	Exclude pattern (can be specified multiple times)
     -help
-    	Show help
+      	Show help
     -include value
-    	Include pattern (can be specified multiple times)
+      	Include pattern (can be specified multiple times)
     -log string
-    	Path to the logfile (default "tdg.log")
+      	Path to the logfile (default "tdg.log")
     -min-chars int
-    	Include comments with more chars than this (default 30)
+      	Include comments with more chars than this (default 30)
     -min-words int
-    	Skip comments with less than minimum words (default 3)
+      	Skip comments with less than minimum words (default 3)
     -root string
-    	Path to the the root of source code (default "./")
+      	Path to the the root of source code (default "./")
     -stdout
-    	Duplicate logs to stdout
+      	Duplicate logs to stdout
     -verbose
-    	Output human-readable json
+      	Output human-readable json
 
 Example:
 
