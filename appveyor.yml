@@ -16,8 +16,7 @@ clone_depth: 3                      # clone entire repository history if not def
 
 before_build:
   - go version
-  - go get github.com/zieckey/goini
-  - go get github.com/ribtoks/tdg/pkg/tdglib
+  - go get
 
 build_script:
   - go build ./...
