@@ -1,4 +1,4 @@
-package main
+package tdglib
 
 import (
 	"bytes"

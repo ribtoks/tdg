@@ -1,4 +1,4 @@
-package main
+package tdglib
 
 import (
 	"bufio"
@@ -91,6 +91,10 @@ func NewToDoGenerator(root string, include []string, exclude []string, minWords,
 		comments: make([]*ToDoComment, 0),
 		addedMap: make(map[string]bool),
 	}
+}
+
+func (td *ToDoGenerator) Root() string {
+	return td.root
 }
 
 func (td *ToDoGenerator) Includes(path string) bool {

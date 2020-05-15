@@ -10,6 +10,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/ribtoks/tdg/pkg/tdglib"
 )
 
 type arrayFlags []string
@@ -51,8 +53,8 @@ func main() {
 		defer logfile.Close()
 	}
 
-	env := NewEnvironment(*srcRootFlag)
-	td := NewToDoGenerator(*srcRootFlag,
+	env := tdglib.NewEnvironment(*srcRootFlag)
+	td := tdglib.NewToDoGenerator(*srcRootFlag,
 		includePatternsFlag,
 		excludePatternsFlag,
 		*minWordCountFlag,
@@ -67,13 +69,13 @@ func main() {
 	}
 
 	result := struct {
-		Root     string         `json:"root"`
-		Branch   string         `json:"branch"`
-		Author   string         `json:"author"`
-		Project  string         `json:"project"`
-		Comments []*ToDoComment `json:"comments"`
+		Root     string                `json:"root"`
+		Branch   string                `json:"branch"`
+		Author   string                `json:"author"`
+		Project  string                `json:"project"`
+		Comments []*tdglib.ToDoComment `json:"comments"`
 	}{
-		Root:     td.root,
+		Root:     td.Root(),
 		Branch:   env.Branch(),
 		Author:   env.Author(),
 		Project:  env.Project(),

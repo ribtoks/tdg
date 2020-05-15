@@ -50,7 +50,7 @@ Supported comments: `//`, `/*`, `#`, `%`, `;;` (adding new supported comments is
 
 As simple as
 
-    go get -u github.com/ribtoks/tdg
+    go get -u github.com/ribtoks/tdg/cmd/tdg
 
 ## Build
 
