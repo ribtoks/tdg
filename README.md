@@ -13,7 +13,9 @@ TODO get - tool to extract todo tasks from source code
 
 ## About
 
-This tool generates json from comments contained in the source code. Main use-case for it is to create automatic issues based on TODO/FIXME/BUG/HACK comments. This tool supports additional tag information in the comment (Category, Issue etc.). Originally designed to be used for project management automation with [tdg-import](https://github.com/ribtoks/kanboard-tdg-import) plugin for Kanboard - you can read more in [this blogpost](https://codejamming.org/2019/how-to-return-to-flow).
+This tool generates json from comments contained in the source code. Main use-case for it is to create automatic issues based on TODO/FIXME/BUG/HACK comments. This tool supports additional tag information in the comment (Category, Issue etc.).
+
+There are two useful applications in project management automation: [converting TODOs into GitHub Issues](https://github.com/ribtoks/tdg-github-action) and synchronization with Kanboard using [tdg-import](https://github.com/ribtoks/kanboard-tdg-import) plugin.
 
 Example of the comment (everything but the first line is optional):
 
